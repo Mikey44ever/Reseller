@@ -20,7 +20,7 @@ import com.store.sales.adapter.OrderAdapter;
 
 import java.util.ArrayList;
 
-import static com.store.constants.Constants.*;
+import static com.store.util.Constants.*;
 
 public class CustomerActivity extends AppCompatActivity {
 

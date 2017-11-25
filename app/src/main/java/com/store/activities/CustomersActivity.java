@@ -1,29 +1,21 @@
 package com.store.activities;
 
-import android.app.Dialog;
 import android.content.Intent;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
 import com.store.R;
 import com.store.pojos.CustomerPOJO;
 import com.store.pojos.builders.CustomerPOJOBuilder;
 import com.store.sales.adapter.CustomerListAdapter;
 
-import static com.store.constants.Constants.*;
+import static com.store.util.Constants.*;
 
 import java.util.ArrayList;
 

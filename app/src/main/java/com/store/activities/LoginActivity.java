@@ -2,12 +2,14 @@ package com.store.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -35,9 +37,10 @@ import javax.net.ssl.HttpsURLConnection;
 
 import com.store.R;
 import com.store.dbs.DBHelper;
+import com.store.util.RESTAPICaller;
 
-import static com.store.constants.Constants.*;
-import static com.store.constants.Strings.*;
+import static com.store.util.Constants.*;
+import static com.store.util.Strings.*;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -47,22 +50,23 @@ public class LoginActivity extends AppCompatActivity {
     Intent mainIntent;
 
     private String userName,password,userId;
+    private boolean isFirstSession;
+    private Cursor sessionCursor;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == REGISTRATION_REQUEST_CODE){
-            if(resultCode == CommonStatusCodes.SUCCESS){
-                //TODO put something here
-            }
-        } else if(requestCode == PRODUCT_RETRIEVAL_REQUEST_CODE){
+        if(requestCode == PRODUCT_RETRIEVAL_REQUEST_CODE){
             String jsonString=data.getStringExtra("products") != null ? data.getStringExtra("products") : "";
-            initializeDB(true,jsonString);//true for testing only
+           // initializeDB(true,jsonString);//true for testing only
         } else if(requestCode == MAIN_DRAWER_ACTIVITY_REQUEST_CODE){
             Intent intent= new Intent(LoginActivity.this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }else if(requestCode == DB_CREATE_REQUEST_CODE){
-
+            if (isFirstSession)
+                insertSession(1);
+            else
+                //TODO HERE
         } else super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -71,10 +75,52 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_page);
 
-        Intent intent = new Intent(getApplicationContext(), MainScreenActivity.class);
-        mainIntent= intent;
-        startActivityForResult(mainIntent,MAIN_DRAWER_ACTIVITY_REQUEST_CODE);
+        initializeDB();
+        initializeObjects();
+        setListeners();
+        checkSessions();
+        /*if(haveNetworkConnection()) {
+            //callProductRetrievalAct();
+        }else{
+            showConstantDialog(LoginActivity.this,NOTICE.name(),NOTICE_MESSAGE,mainIntent,"",false);
+        }
 
+        Intent intent = new Intent(getApplicationContext(), MainScreenActivity.class);
+        mainIntent= intent;*/
+        //startActivityForResult(mainIntent,MAIN_DRAWER_ACTIVITY_REQUEST_CODE);//this line is for testing purposes only
+    }
+
+    private void insertSession(int sessionId){
+        try{
+            mydb.insetSession(sessionId);
+        }catch (Exception e){
+            Log.i(null,e.getMessage());
+        }
+    }
+
+    private void getInsertLastSession(){
+        while(sessionCursor.moveToNext()){
+
+        }
+    }
+
+    private void checkSessions(){
+        Cursor sessionCursor = mydb.getAllData(mydb.APP_SESSION_HISTORY);
+        this.sessionCursor=sessionCursor;
+        int count = sessionCursor.getCount();
+        if(count==0){
+            boolean isConnected=haveNetworkConnection();
+            if(!isConnected)
+                showConstantDialog(LoginActivity.this,NOTICE.name(),NOTICE_FIRST_SESSION,mainIntent,"",false);
+            else{
+                Intent dbCreateIntent = new Intent(getApplicationContext(),DBCreateActivity.class);
+                startActivityForResult(dbCreateIntent,DB_CREATE_REQUEST_CODE);
+                isFirstSession=true;
+            }
+        }
+    }
+
+    private void initializeObjects(){
         btnSignUp = (Button) findViewById(R.id.btnSignUp);
         btnSignIn = (Button) findViewById(R.id.btnSignIn);
         btnExit = (Button) findViewById(R.id.btnExit);
@@ -83,25 +129,11 @@ public class LoginActivity extends AppCompatActivity {
 
         txtUsername.setText("Uu");
         txtPassword.setText("uu");
-
-        if(haveNetworkConnection()) {
-            //callProductRetrievalAct();
-        }else{
-            showConstantDialog(LoginActivity.this,NOTICE.name(),NOTICE_MESSAGE,mainIntent,"",false);
-        }
-
-        mydb = new DBHelper(this);
-
-        setListeners();
     }
 
-    private void initializeDB(boolean doRefresh,String productJsonString){
-        if(!productJsonString.equals("")){
-            Intent dbIntent = new Intent(getApplicationContext(), DBCreateActivity.class);
-            dbIntent.putExtra("refreshDB",doRefresh);
-            dbIntent.putExtra("products",productJsonString);
-            startActivityForResult(dbIntent,DB_CREATE_REQUEST_CODE);
-        }
+    private void initializeDB(){
+        DBHelper mydb=new DBHelper(this);
+        this.mydb = mydb;
     }
 
     private boolean haveNetworkConnection() {
@@ -135,7 +167,11 @@ public class LoginActivity extends AppCompatActivity {
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                performLoginCheck(txtUsername.getText().toString(),txtPassword.getText().toString());
+                try {
+                    performLoginCheck(txtUsername.getText().toString(),txtPassword.getText().toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
         btnSignUp.setOnClickListener(new View.OnClickListener() {
@@ -147,11 +183,19 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void performLoginCheck(String username,String password){
+    private void performLoginCheck(String username,String password) throws JSONException {
         if(haveNetworkConnection()) {
             this.userName=txtUsername.getText().toString();
             this.password=txtPassword.getText().toString();
-            new LoginAPI().execute();
+
+            JSONObject postDataParams = new JSONObject();
+            postDataParams.put("username", userName);
+            postDataParams.put("password", password);
+
+            JSONObject userObj = new JSONObject();
+            userObj.put("user",postDataParams);
+
+            new LoginAPI().execute(LOGIN_URL,userObj.toString());
         }else{
             showConstantDialog(LoginActivity.this,NOTICE.name(),NOTICE_MESSAGE,mainIntent,"",false);
         }
@@ -183,48 +227,13 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... strings) {
             try{
-                JSONObject postDataParams = new JSONObject();
-                postDataParams.put("username", userName);
-                postDataParams.put("password", password);
+                String jsonParam=null;
+                String url = strings[0];
+                if(strings.length>1)
+                    jsonParam=strings[1];
 
-                JSONObject userObj = new JSONObject();
-                userObj.put("user",postDataParams);
-
-                URL url = new URL(LOGIN_URL);
-
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(15000);
-                conn.setConnectTimeout(15000);
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                conn.connect();
-
-                OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-                writer.write(userObj.toString());
-
-                writer.flush();
-                writer.close();
-                os.close();
-
-                int responseCode=conn.getResponseCode();
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    BufferedReader in=new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-                    StringBuffer sb = new StringBuffer("");
-                    String line="";
-                    while((line = in.readLine()) != null) {
-                        sb.append(line);
-                        break;
-                    }
-                    in.close();
-                    return sb.toString();
-
-                } else {
-                    return new String("false : "+responseCode);
-                }
+                RESTAPICaller restapiCaller = new RESTAPICaller();
+                return restapiCaller.doAPICall(url, jsonParam);
             } catch (JSONException e) {
                 e.printStackTrace();
             } catch (MalformedURLException e) {

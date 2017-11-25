@@ -31,7 +31,7 @@ import pos.store.morphsys.com.morphsysstoreapp.pojo.cart.CartPOJOBuilder;
 import pos.store.morphsys.com.morphsysstoreapp.pojo.product.ProductPOJO;
 import pos.store.morphsys.com.morphsysstoreapp.pojo.product.ProductPOJOBuilder;
 
-import static com.store.constants.Constants.*;
+import static com.store.util.Constants.*;
 
 public class ShopFragment extends Fragment {
     private static final String LOG_TAG = ShopFragment.class.getSimpleName();
@@ -114,7 +114,7 @@ public class ShopFragment extends Fragment {
         barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
         Point[] p = barcode.cornerPoints;
         String strBarcode = barcode.displayValue;
-        Cursor product=mydb.getSpecificProduct(mydb.PRODUCTS_TABLE_NAME,BARCODE,strBarcode);
+        /*Cursor product=mydb.getSpecificProduct(mydb.PRODUCTS_TABLE_NAME,BARCODE,strBarcode);
         pBuilder = new ProductPOJOBuilder();
         while (product.moveToNext()) {
             String productId=product.getString(product.getColumnIndex(PRODUCT_ID));
@@ -127,7 +127,7 @@ public class ShopFragment extends Fragment {
                         .price(price.getDouble(price.getColumnIndex(PRICE)))
                         .build();
             }
-        }
+        }*/
         txtProductName.setText(pPOJO.getProductName());
         txtProductPrice.setText(new Double(pPOJO.getProductPrice()).toString());
     }

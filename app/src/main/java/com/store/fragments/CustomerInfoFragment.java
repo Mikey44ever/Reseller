@@ -3,24 +3,21 @@ package com.store.fragments;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.store.R;
-import com.store.activities.CreateOrderActivity;
 import com.store.pojos.CustomerPOJO;
 
 import java.util.ArrayList;
 
 import pos.store.morphsys.com.morphsysstoreapp.pojo.product.ProductPOJO;
 
-import static com.store.constants.Constants.*;
+import static com.store.util.Constants.*;
 
 /**
  * A simple {@link Fragment} subclass.

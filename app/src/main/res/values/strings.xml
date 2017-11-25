@@ -55,10 +55,10 @@
     <string-array name="main_grid_array">
         <item>Customers</item>
         <item>COD Areas</item>
+        <item>LBC/JRS Shipping Rates</item>
         <item>COD Shipping Rates</item>
         <item>Income</item>
         <item>Orders</item>
-        <item>LBC/JRS Shipping Rates</item>
     </string-array>
 
     <string name="activity_title_about_us">About Us</string>

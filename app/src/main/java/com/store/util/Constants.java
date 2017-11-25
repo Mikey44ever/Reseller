@@ -1,4 +1,4 @@
-package com.store.constants;
+package com.store.util;
 
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -15,10 +15,14 @@ public class Constants {
 
     public static final String REGISTRATION_URL = "http://morphsys.com.ph/store/appregister/";//http://morphsys.com.ph/store/index.php?route=account/register/onlineregister";
     public static final String PRODUCTS_URL = "http://morphsys.com.ph/store/getitemsonline";//"http://morphsys.com.ph/store/getitems.php";
-    public static final String LOGIN_URL = "http://morphsys.com.ph/store/login";//http://morphsys.com.ph/store/index.php?route=common/login";
+    public static final String LOGIN_URL = "http://morphsys.com.ph/store/loginonline";//http://morphsys.com.ph/store/index.php?route=common/login";
     public static final String CHECKOUT_URL ="http://morphsys.com.ph/store/checkout";//http://morphsys.com.ph/store/index.php?route=account/cart/checkoutcart";
     public static final String CARTS_URL = "http://morphsys.com.ph/store/getcartsonline";
     public static final String CART_URL = "http://morphsys.com.ph/store/getcartdetails";
+
+    public static final String COD_AREAS_URL="http://zensure-essentials.com/reseller/getcodareas";
+    public static final String COD_SHIPPING_RATES="http://zensure-essentials.com/reseller/getCodShippingRates";
+    public static final String THIRD_PARTY_SHIPPING_RATES="http://zensure-essentials.com/reseller/getthirdpartyrates";
 
     public static final String PRODUCT_POJO_SERIAL_KEY="com.pos.store.ProductPOJO";
     public static final String CUSTOMER_POJO_SERIAL_KEY="com.pos.store.CustomerPOJO";
@@ -68,6 +72,7 @@ public class Constants {
     public static final String DESC = " DESC";
 
     public static final String NOTICE_MESSAGE = "You're not connected to the internet!";
+    public static final String NOTICE_FIRST_SESSION = "You need to be connected to the internet since this is your first session.";
 
     public static final HashMap<String,String> getBranches(){//
         HashMap<String,String> map = new HashMap<String,String>();

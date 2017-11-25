@@ -22,7 +22,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import static com.store.constants.Constants.*;
+import static com.store.util.Constants.*;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

@@ -90,9 +90,9 @@ public class GridAdapter extends ArrayAdapter {
             case "lbc/jrs shipping rates":
                 imageView.setBackgroundResource(R.drawable.delivery);
                 break;
-            default:
-                imageView.setBackgroundResource(R.drawable.people);
-                break;
+            /*default:
+                imageView.setBackgroundResource(R.drawable.cod_areas);
+                break;*/
         }
     }
 }

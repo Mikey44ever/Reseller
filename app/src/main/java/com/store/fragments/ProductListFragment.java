@@ -3,7 +3,6 @@ package com.store.fragments;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,15 +11,14 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.store.R;
-import com.store.activities.CreateOrderActivity;
 import com.store.pojos.CustomerPOJO;
 import com.store.pojos.ProductPOJO;
 import com.store.sales.adapter.ProductListAdapter;
 
 import java.util.ArrayList;
 
-import static com.store.constants.Constants.CUSTOMER_POJO_SERIAL_KEY;
-import static com.store.constants.Constants.PRODUCT_POJO_SERIAL_KEY;
+import static com.store.util.Constants.CUSTOMER_POJO_SERIAL_KEY;
+import static com.store.util.Constants.PRODUCT_POJO_SERIAL_KEY;
 
 /**
  * A simple {@link Fragment} subclass.

@@ -45,11 +45,11 @@ import pos.store.morphsys.com.morphsysstoreapp.pojo.cart.CartListPOJOBuilder;
 import pos.store.morphsys.com.morphsysstoreapp.pojo.cart.CartPOJO;
 import pos.store.morphsys.com.morphsysstoreapp.pojo.cart.CartPOJOBuilder;
 
-import static com.store.constants.Constants.CARTS_URL;
-import static com.store.constants.Constants.CART_POJO_SERIAL_KEY;
-import static com.store.constants.Constants.CART_URL;
-import static com.store.constants.Constants.SPECIFIC_CART_ITEMS_REQUEST_CODE;
-import static com.store.constants.Constants.TAG_SHOP;
+import static com.store.util.Constants.CARTS_URL;
+import static com.store.util.Constants.CART_POJO_SERIAL_KEY;
+import static com.store.util.Constants.CART_URL;
+import static com.store.util.Constants.SPECIFIC_CART_ITEMS_REQUEST_CODE;
+import static com.store.util.Constants.TAG_SHOP;
 
 public class CartListFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";

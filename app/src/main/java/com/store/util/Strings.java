@@ -1,4 +1,4 @@
-package com.store.constants;
+package com.store.util;
 
 public enum Strings {
 

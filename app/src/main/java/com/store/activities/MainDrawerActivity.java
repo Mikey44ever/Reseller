@@ -28,7 +28,7 @@ import pos.store.morphsys.com.morphsysstoreapp.fragment.ProductListFragment;
 import pos.store.morphsys.com.morphsysstoreapp.fragment.ShopFragment;
 import pos.store.morphsys.com.morphsysstoreapp.other.CircleTransform;
 
-import static com.store.constants.Constants.*;
+import static com.store.util.Constants.*;
 
 public class MainDrawerActivity extends AppCompatActivity {
 

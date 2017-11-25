@@ -1,10 +1,6 @@
 package com.store.activities;
 
-import android.content.Intent;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,11 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Spinner;
-import android.widget.TextView;
 
-import com.google.android.gms.vision.text.Text;
 import com.store.R;
 import com.store.fragments.CustomerInfoFragment;
 import com.store.fragments.ProductListFragment;
@@ -28,7 +20,7 @@ import java.util.ArrayList;
 import com.store.pojos.ProductPOJO;
 import com.store.pojos.builders.ProductPOJOBuilder;
 
-import static com.store.constants.Constants.*;
+import static com.store.util.Constants.*;
 
 
 public class CreateOrderActivity extends AppCompatActivity {

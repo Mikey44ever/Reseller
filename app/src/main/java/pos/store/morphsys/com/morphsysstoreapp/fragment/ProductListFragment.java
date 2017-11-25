@@ -29,11 +29,11 @@ import pos.store.morphsys.com.morphsysstoreapp.pojo.cart.CartPOJO;
 import pos.store.morphsys.com.morphsysstoreapp.pojo.product.ProductPOJO;
 import pos.store.morphsys.com.morphsysstoreapp.pojo.product.ProductPOJOBuilder;
 
-import static com.store.constants.Constants.CART_POJO_SERIAL_KEY;
-import static com.store.constants.Constants.PRICE;
-import static com.store.constants.Constants.PRODUCT_ID;
-import static com.store.constants.Constants.PRODUCT_NAME;
-import static com.store.constants.Constants.VIEW_CART_REQUEST_CODE;
+import static com.store.util.Constants.CART_POJO_SERIAL_KEY;
+import static com.store.util.Constants.PRICE;
+import static com.store.util.Constants.PRODUCT_ID;
+import static com.store.util.Constants.PRODUCT_NAME;
+import static com.store.util.Constants.VIEW_CART_REQUEST_CODE;
 
 public class ProductListFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";

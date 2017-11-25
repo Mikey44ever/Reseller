@@ -1,12 +1,12 @@
 package com.store.activities;
 
-import android.app.Dialog;
 import android.content.Intent;
-import android.os.Handler;
+import android.os.AsyncTask;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,7 +17,12 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.store.R;
+import com.store.drawables.TextDrawable;
 import com.store.pojos.CODShippingRatesPOJO;
 import com.store.pojos.JRSLBCShippingRatesPOJO;
 import com.store.pojos.OrderPOJO;
@@ -29,11 +34,28 @@ import com.store.sales.adapter.CODShippingRatesAdapter;
 import com.store.sales.adapter.GridAdapter;
 import com.store.sales.adapter.JRSLBCShippingRatesAdapter;
 import com.store.sales.adapter.OrderAdapter;
+import com.store.util.RESTAPICaller;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static com.store.constants.Constants.*;
+import javax.net.ssl.HttpsURLConnection;
+
+import static com.store.util.Constants.*;
 
 
 public class MainScreenActivity extends AppCompatActivity {
@@ -43,6 +65,9 @@ public class MainScreenActivity extends AppCompatActivity {
     public static String CURRENT_TAG = TAG_HOME;
     private ListView commonListView;
     private View commonView, commonTitleView;
+    private TextView commonTextViewHeader;
+
+    private String methodForReflection;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,47 +86,6 @@ public class MainScreenActivity extends AppCompatActivity {
         gridview.setAdapter(gridAdapter);
 
         setUpGridViewView();
-    }
-
-    private void showJRSLBCShippingRates(){
-        ArrayList<JRSLBCShippingRatesPOJO> ljRatesPOJOs = new ArrayList<JRSLBCShippingRatesPOJO>();
-        JRSLBCShippingRatesPOJO ljPOJO = new JRSLBCShippingRatePOJOBuilder()
-                .qty("5 bxs & below")
-                .lbcRate("185.00")
-                .jrsRate("155.00")
-                .build();
-
-        ljRatesPOJOs.add(ljPOJO);
-
-        ljPOJO = new JRSLBCShippingRatePOJOBuilder()
-                .qty("14 bxs & below")
-                .lbcRate("200.00")
-                .jrsRate("170.00")
-                .build();
-
-        ljRatesPOJOs.add(ljPOJO);
-
-        ArrayAdapter adapter = new JRSLBCShippingRatesAdapter(MainScreenActivity.this,R.layout.lj_shipping_rates_header,ljRatesPOJOs);
-        showCommonPopUp(R.layout.lj_shipping_rates_header, adapter, R.string.lbc_jrc_shipping_rate,0,null);
-    }
-
-    private void showCODShippingRates(){
-        ArrayList<CODShippingRatesPOJO> srPOJOs = new ArrayList<CODShippingRatesPOJO>();
-        CODShippingRatesPOJO csrPOJO = new CODShippingRatesPOJOBuilder()
-                .qty("10 bxs & below")
-                .rates("170.00")
-                .build();
-
-        srPOJOs.add(csrPOJO);
-
-        csrPOJO = new CODShippingRatesPOJOBuilder()
-                .qty("20 bxs & below")
-                .rates("210.00")
-                .build();
-
-        srPOJOs.add(csrPOJO);
-        ArrayAdapter adapter = new CODShippingRatesAdapter(MainScreenActivity.this,R.layout.cod_shipping_rates,srPOJOs);
-        showCommonPopUp(R.layout.cod_shipping_rates_header, adapter, R.string.cod_shipping_rate,0,null);
     }
 
     private void showOrderHistory(){
@@ -125,25 +109,98 @@ public class MainScreenActivity extends AppCompatActivity {
         orderPOJOs.add(orderPOJO);
 
         ArrayAdapter adapter = new OrderAdapter(MainScreenActivity.this,R.layout.orders,orderPOJOs);
-        showCommonPopUp(R.layout.orders_header, adapter, R.string.order_history, 0, null);
+
+        showCommonPopUp(R.layout.orders_header, adapter, R.string.order_history, R.drawable.add_cart, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent orderIntent = new Intent(getApplicationContext(),MainScreenActivity.class);
+                startActivityForResult(orderIntent,CREATE_ORDER_REQUEST_CODE);
+            }
+        });
+    }
+
+    private void resetReflectVariables(){
+        methodForReflection=null;
+    }
+
+    private void showCODShippingRates(){
+        methodForReflection="showCODShippingRates";
+        callAPICaller(COD_SHIPPING_RATES,null);
     }
 
     private void showCODAreas(){
-        ArrayList codAreas = new ArrayList();
-        codAreas.add("doon");
-        codAreas.add("diyan");
-        codAreas.add("dito");
-        codAreas.add("dine");
-        codAreas.add("doon");
-        codAreas.add("diyan");
-        codAreas.add("dito");
-        codAreas.add("dine");
-        codAreas.add("doon");
-        codAreas.add("diyan");
-        codAreas.add("dito");
-        codAreas.add("dine");
+        methodForReflection="showCODAreas";
+        callAPICaller(COD_AREAS_URL,null);
+    }
 
-        ArrayAdapter adapter = new CODAreasAdapter(MainScreenActivity.this,R.layout.cod_area, codAreas);
+    private void showJRSLBCShippingRates(){
+        methodForReflection="showJRSLBCShippingRates";
+        callAPICaller(THIRD_PARTY_SHIPPING_RATES,null);
+    }
+
+    private void callAPICaller(String url,String data){
+        new CallRestAPICaller().execute(url,data);
+    }
+
+    private void showJRSLBCShippingRatesAfterAPI(String data){
+        resetReflectVariables();
+
+        JsonParser parser = new JsonParser();
+        JsonElement tradeElement = parser.parse(data);
+        JsonArray jsonData = tradeElement.getAsJsonObject().getAsJsonArray("third_party_shipping_rates");
+
+        ArrayList<JRSLBCShippingRatesPOJO> ljRatesPOJOs = new ArrayList<JRSLBCShippingRatesPOJO>();
+        JRSLBCShippingRatesPOJO ljPOJO = null;
+        for(JsonElement obj:jsonData){
+            int qty = Integer.valueOf(obj.getAsJsonObject().get("quantity").toString().replaceAll("\"",""));
+            ljPOJO = new JRSLBCShippingRatePOJOBuilder()
+                    .qty(qty+" bxs & below")
+                    .lbcRate(obj.getAsJsonObject().get("lbc_rate").toString().replaceAll("\"",""))
+                    .jrsRate(obj.getAsJsonObject().get("jrs_rate").toString().replaceAll("\"",""))
+                    .build();
+            ljRatesPOJOs.add(ljPOJO);
+        }
+
+        ArrayAdapter adapter = new JRSLBCShippingRatesAdapter(MainScreenActivity.this,R.layout.lj_shipping_rates_header,ljRatesPOJOs);
+        showCommonPopUp(R.layout.lj_shipping_rates_header, adapter, R.string.lbc_jrc_shipping_rate,0,null);
+    }
+
+    private void showCODShippingRatesAfterAPI(String data){
+        resetReflectVariables();
+
+        JsonParser parser = new JsonParser();
+        JsonElement tradeElement = parser.parse(data);
+        JsonArray jsonData = tradeElement.getAsJsonObject().getAsJsonArray("cod_shipping_rates");
+
+        ArrayList<CODShippingRatesPOJO> srPOJOs = new ArrayList<CODShippingRatesPOJO>();
+        CODShippingRatesPOJO csrPOJO = null;
+        for(JsonElement obj:jsonData){
+            int qty = Integer.valueOf(obj.getAsJsonObject().get("quantity").toString().replaceAll("\"",""));
+            csrPOJO = new CODShippingRatesPOJOBuilder()
+                    .qty(qty+" bxs & below")
+                    .rates(obj.getAsJsonObject().get("price_rate").toString().replaceAll("\"",""))
+                    .build();
+
+            srPOJOs.add(csrPOJO);
+        }
+
+        ArrayAdapter adapter = new CODShippingRatesAdapter(MainScreenActivity.this,R.layout.cod_shipping_rates,srPOJOs);
+        showCommonPopUp(R.layout.cod_shipping_rates_header, adapter, R.string.cod_shipping_rate,0,null);
+    }
+
+    private void showCODAreasAfterAPI(String data){
+        resetReflectVariables();
+
+        JsonParser parser = new JsonParser();
+        JsonElement tradeElement = parser.parse(data);
+        JsonArray jsonData = tradeElement.getAsJsonObject().getAsJsonArray("cod_areas");
+
+        ArrayList codAreas = new ArrayList();
+        for(JsonElement obj:jsonData){
+            codAreas.add(obj.getAsJsonObject().get("city").toString().replaceAll("\"",""));
+        }
+
+        CODAreasAdapter adapter = new CODAreasAdapter(MainScreenActivity.this,R.layout.cod_area, codAreas);
         showCommonPopUp(R.layout.cod_areas_header, adapter, R.string.cod_areas,0,null);
     }
 
@@ -154,6 +211,9 @@ public class MainScreenActivity extends AppCompatActivity {
         commonListView.setAdapter(adapter);
         View headerView = (View) getLayoutInflater().inflate(headerId,null);
         commonListView.addHeaderView(headerView);
+
+        /*commonTextViewHeader=(TextView) commonView.findViewById(R.id.txtHeaderForList);
+        commonTextViewHeader.setText("TEST");*/
 
         commonTitleView=(View) getLayoutInflater().inflate(R.layout.custom_title,null);
         ImageButton action = (ImageButton) commonTitleView.findViewById(R.id.imgActionBtn);
@@ -226,5 +286,72 @@ public class MainScreenActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public class CallRestAPICaller extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try{
+                String jsonParam=null;
+                String url = strings[0];
+                if(strings.length>1)
+                    jsonParam=strings[1];
+
+                RESTAPICaller restapiCaller = new RESTAPICaller();
+                return restapiCaller.doAPICall(url, jsonParam);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (ProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            switch (methodForReflection){
+                case "showCODAreas" :
+                    showCODAreasAfterAPI(s);
+                    break;
+                case "showCODShippingRates" :
+                    showCODShippingRatesAfterAPI(s);
+                    break;
+                case "showJRSLBCShippingRates" :
+                    showJRSLBCShippingRatesAfterAPI(s);
+                    break;
+            }
+        }
+
+        /*private void callAfterAsyncTask(String data){
+            Log.i(null,data);
+            try{
+                Class<?> c = Class.forName("com.store.activities.MainScreenActivity");
+                Object gvClass = c.newInstance();
+                Class[] argTypes = new Class[] {String.class};
+
+                //queryType = method to be called
+                // argType = parameters of the method to be called with type e.g. "queryOne" below
+                Method main = c.getDeclaredMethod(methodForReflection, argTypes);
+                main.invoke(gvClass,new Object[] {data});
+                Log.i(null,"finished reflection...");
+            }catch(NoSuchMethodException e){
+                e.printStackTrace();
+            }catch(IllegalAccessException e){
+                e.printStackTrace();
+            }catch(InstantiationException e){
+                e.printStackTrace();
+            }catch(ClassNotFoundException e){
+                e.printStackTrace();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }*/
     }
 }

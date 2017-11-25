@@ -19,10 +19,11 @@ import com.google.gson.JsonObject;
 import org.json.JSONObject;
 
 public class DBHelper extends SQLiteOpenHelper{
-    public static final String DATABASE_NAME = "MORPHSYS.db";
-    public static final String PRODUCTS_TABLE_NAME = "PRODUCTS";
-    public static final String PRODUCTS_PRICE_TABLE_NAME = "PRODUCTS_PRICE";
-    public static final String USERS_TABLE = "USERS";
+    public static final String DATABASE_NAME = "RESELLER.db";
+    public static final String APP_SESSION_HISTORY = "APP_SESSION_HISTORY";
+    public static final String COD_AREAS = "COD_AREAS";
+    public static final String COD_SHIPPING_RATES = "COD_SHIPPING_RATES";
+    public static final String THIRD_PARTY_SHIPPING_RATES = "THIRD_PARTY_SHIPPING_RATES";
     private HashMap hp;
     String timeStamp = new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss a").format(new Date());
 
@@ -32,70 +33,71 @@ public class DBHelper extends SQLiteOpenHelper{
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS PRODUCTS('PRODUCT_ID' text PRIMARY KEY, 'PRODUCT_NAME' text, 'PRODUCT_DESCRIPTION' text,'BARCODE' text" +
-                ",'CREATION_DATE' text, 'EFFECTIVE_DATE' text,'EXPIRATION_DATE' text)");
-
-        db.execSQL("CREATE TABLE IF NOT EXISTS PRODUCTS_PRICE('PRODUCT_PRICE_ID' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,'PRODUCT_ID' text, 'PRODUCT_PRICE' NUMERIC"+
-                ",'CREATION_DATE' text, 'EFFECTIVE_DATE' text,'EXPIRATION_DATE' text)");
-
-        db.execSQL("CREATE TABLE IF NOT EXISTS USERS('USER_ID' NUMERIC PRIMARY KEY,'USER_NAME' text, 'PASSWORD' text"+
-                ",'CREATION_DATE' text, 'EFFECTIVE_DATE' text,'EXPIRATION_DATE' text)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS APP_SESSION_HISTORY('SESSION_ID' number PRIMARY KEY, " +
+                "'SESSION_DATE' text)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS COD_AREAS('AREA_ID' number PRIMARY KEY, " +
+                "'PROVINCE' text, 'CITY' text)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS COD_SHIPPING_RATES('RATE_ID' number PRIMARY KEY, " +
+                "'QUANTITY' number, 'PRICE_RATE' number)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS THIRD_PARTY_SHIPPING_RATES('RATE_ID' number PRIMARY KEY, " +
+                "'QUANTITY' number, 'LBC_RATE' number,'JRS_RATE' number)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS PRODUCTS");
-        db.execSQL("DROP TABLE IF EXISTS PRODUCTS_PRICE");
-        db.execSQL("DROP TABLE IF EXISTS USERS");
+        db.execSQL("DROP TABLE IF EXISTS APP_SESSION_HISTORY");
+        db.execSQL("DROP TABLE IF EXISTS COD_AREAS");
+        db.execSQL("DROP TABLE IF EXISTS COD_SHIPPING_RATES");
+        db.execSQL("DROP TABLE IF EXISTS THIRD_PARTY_SHIPPING_RATES");
         onCreate(db);
     }
 
     public void doDBRefresh(){
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("DROP TABLE IF EXISTS PRODUCTS");
-        db.execSQL("DROP TABLE IF EXISTS PRODUCTS_PRICE");
-        db.execSQL("DROP TABLE IF EXISTS USERS");
+        db.execSQL("DROP TABLE IF EXISTS COD_AREAS");
+        db.execSQL("DROP TABLE IF EXISTS COD_SHIPPING_RATES");
+        db.execSQL("DROP TABLE IF EXISTS THIRD_PARTY_SHIPPING_RATES");
         onCreate(db);
     }
 
-    public boolean insertProduct(JsonElement details) throws Exception{
+    public void insertCodAreas(int areaId,String province,String city)throws Exception{
         SQLiteDatabase db = this.getWritableDatabase();
-        JsonObject obj = details.getAsJsonObject();
         ContentValues contentValues = new ContentValues();
-        contentValues.put("PRODUCT_ID", (obj.get("item_id").toString()).replaceAll("^\"|\"$", ""));
-        contentValues.put("PRODUCT_NAME", (obj.get("description").toString()).replaceAll("^\"|\"$", ""));
-        contentValues.put("PRODUCT_DESCRIPTION", (obj.get("description").toString()).replaceAll("^\"|\"$", ""));
-        contentValues.put("BARCODE", (obj.get("barcode").toString()).replaceAll("^\"|\"$", ""));
-        contentValues.put("CREATION_DATE", timeStamp);
-        contentValues.put("EFFECTIVE_DATE", timeStamp);
-        contentValues.put("EXPIRATION_DATE", "");
-        db.insert(PRODUCTS_TABLE_NAME, null, contentValues);
-        return true;
+
+        contentValues.put("area_id",areaId);
+        contentValues.put("province",province);
+        contentValues.put("city",city);
+        db.insert(COD_AREAS, null, contentValues);
     }
 
-    public void insertUser(String username,String userId,String password){
+    public void insertThirdPartyShippingRates(int rateId,int qty,double lbcRate,double jrsRate){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put("USER_ID", userId);
-        contentValues.put("USER_NAME", username);
-        contentValues.put("PASSWORD", password);
-        contentValues.put("CREATION_DATE", timeStamp);
-        contentValues.put("EFFECTIVE_DATE", timeStamp);
-        contentValues.put("EXPIRATION_DATE", "");
-        db.insert(USERS_TABLE, null, contentValues);
+
+        contentValues.put("rate_id",rateId);
+        contentValues.put("quantity",qty);
+        contentValues.put("lbc_rate",lbcRate);
+        contentValues.put("jrs_rate",jrsRate);
+        db.insert(THIRD_PARTY_SHIPPING_RATES, null, contentValues);
     }
 
-    public boolean insertProductPrice(JsonElement details) throws Exception {
+    public void insetSession(int sessionId)throws Exception{
         SQLiteDatabase db = this.getWritableDatabase();
-        JsonObject obj = details.getAsJsonObject();
         ContentValues contentValues = new ContentValues();
-        contentValues.put("PRODUCT_ID", (obj.get("item_id").toString()).replaceAll("^\"|\"$", ""));
-        contentValues.put("PRODUCT_PRICE", (obj.get("cost").toString()).replaceAll("^\"|\"$", ""));
-        contentValues.put("CREATION_DATE", timeStamp);
-        contentValues.put("EFFECTIVE_DATE", timeStamp);
-        contentValues.put("EXPIRATION_DATE", "");
-        db.insert(PRODUCTS_PRICE_TABLE_NAME, null, contentValues);
-        return true;
+
+        contentValues.put("session_id",sessionId);
+        contentValues.put("session_date",timeStamp);
+        db.insert(APP_SESSION_HISTORY, null, contentValues);
+    }
+
+    public void insertCodShippingRates(int rateId,int qty,double priceRate)throws Exception{
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put("rate_id",rateId);
+        contentValues.put("quantity",qty);
+        contentValues.put("price_rate",priceRate);
+        db.insert(COD_SHIPPING_RATES, null, contentValues);
     }
 
     public Cursor getAllData(String table) {
