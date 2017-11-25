@@ -15,11 +15,11 @@ public class Constants {
 
     public static final String REGISTRATION_URL = "http://morphsys.com.ph/store/appregister/";//http://morphsys.com.ph/store/index.php?route=account/register/onlineregister";
     public static final String PRODUCTS_URL = "http://morphsys.com.ph/store/getitemsonline";//"http://morphsys.com.ph/store/getitems.php";
-    public static final String LOGIN_URL = "http://morphsys.com.ph/store/loginonline";//http://morphsys.com.ph/store/index.php?route=common/login";
     public static final String CHECKOUT_URL ="http://morphsys.com.ph/store/checkout";//http://morphsys.com.ph/store/index.php?route=account/cart/checkoutcart";
     public static final String CARTS_URL = "http://morphsys.com.ph/store/getcartsonline";
     public static final String CART_URL = "http://morphsys.com.ph/store/getcartdetails";
 
+    public static final String LOGIN_URL = "http://zensure-essentials.com/reseller/loginonline";
     public static final String COD_AREAS_URL="http://zensure-essentials.com/reseller/getcodareas";
     public static final String COD_SHIPPING_RATES="http://zensure-essentials.com/reseller/getCodShippingRates";
     public static final String THIRD_PARTY_SHIPPING_RATES="http://zensure-essentials.com/reseller/getthirdpartyrates";
@@ -71,6 +71,8 @@ public class Constants {
     public static final String ORDER_BY= " ORDER BY";
     public static final String DESC = " DESC";
 
+    public static final String USER_NAME_PASSWORD_NOT_EXISTING="Username or password is not existing.";
+    public static final String USER_AUTHENTICATED="User authenticated!";
     public static final String NOTICE_MESSAGE = "You're not connected to the internet!";
     public static final String NOTICE_FIRST_SESSION = "You need to be connected to the internet since this is your first session.";
 

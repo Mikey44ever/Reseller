@@ -72,7 +72,7 @@ public class GridAdapter extends ArrayAdapter {
 
     private void iconSetter(final ImageView imageView,final String text){
         switch (text.toLowerCase()){
-            case "customers" :
+            case "customer details" :
                 imageView.setBackgroundResource(R.drawable.people);
                 break;
             case "cod areas" :

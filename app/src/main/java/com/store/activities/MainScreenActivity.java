@@ -22,11 +22,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.store.R;
+import com.store.dbs.DBHelper;
 import com.store.drawables.TextDrawable;
 import com.store.pojos.CODShippingRatesPOJO;
+import com.store.pojos.CustomerPOJO;
 import com.store.pojos.JRSLBCShippingRatesPOJO;
 import com.store.pojos.OrderPOJO;
 import com.store.pojos.builders.CODShippingRatesPOJOBuilder;
+import com.store.pojos.builders.CustomerPOJOBuilder;
 import com.store.pojos.builders.JRSLBCShippingRatePOJOBuilder;
 import com.store.pojos.builders.OrderPOJOBuilder;
 import com.store.sales.adapter.CODAreasAdapter;
@@ -66,19 +69,24 @@ public class MainScreenActivity extends AppCompatActivity {
     private ListView commonListView;
     private View commonView, commonTitleView;
     private TextView commonTextViewHeader;
-
-    private String methodForReflection;
+    private DBHelper myDb;
+    private CustomerPOJO customerPOJO;
+    private String methodForReflection,userGroupId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
 
+        myDb = new DBHelper(this);
+        customerPOJO = (CustomerPOJO) getIntent().getSerializableExtra(CUSTOMER_POJO_SERIAL_KEY);
+        userGroupId = getIntent().getStringExtra("userGroupId");
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.mainToolbar);
         toolbar.setTitle("");
-        toolbar.setBackgroundResource(R.drawable.business);
+        toolbar.setBackgroundResource(R.drawable.kirei_logo);
         setSupportActionBar(toolbar);
 
-        ArrayList mThumbs= new ArrayList(Arrays.asList(getResources().getStringArray(R.array.main_grid_array)));
+        ArrayList mThumbs= getThumbs();
 
         gridview = (GridView) findViewById(R.id.gridView);
         GridAdapter gridAdapter = new GridAdapter(MainScreenActivity.this,R.layout.row_grid, mThumbs);
@@ -86,6 +94,13 @@ public class MainScreenActivity extends AppCompatActivity {
         gridview.setAdapter(gridAdapter);
 
         setUpGridViewView();
+    }
+
+    private ArrayList getThumbs(){
+        if(userGroupId.equals("43"))
+            return new ArrayList(Arrays.asList(getResources().getStringArray(R.array.reseller_grid_array)));
+        else
+            return new ArrayList();
     }
 
     private void showOrderHistory(){
@@ -244,9 +259,12 @@ public class MainScreenActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String value =(String) parent.getItemAtPosition(position);
                 switch (value.toLowerCase()) {
-                    case "customers":
-                        Intent customersIntent = new Intent(getApplicationContext(),CustomersActivity.class);
-                        startActivityForResult(customersIntent,CUSTOMERS_LIST_REQUEST_CODE);
+                    case "customer details":
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable(CUSTOMER_POJO_SERIAL_KEY,customerPOJO);
+                        Intent customerIntent = new Intent(getApplicationContext(),CustomerActivity.class);
+                        customerIntent.putExtras(bundle);
+                        startActivityForResult(customerIntent,CUSTOMERS_LIST_REQUEST_CODE);
                         break;
                     case "cod areas":
                         showCODAreas();
@@ -281,6 +299,7 @@ public class MainScreenActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_logout) {
+            myDb.updateLoggedInStatus(getIntent().getStringExtra("userId"),"false");
             finish();
             return true;
         }

@@ -37,6 +37,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 import com.store.R;
 import com.store.dbs.DBHelper;
+import com.store.pojos.CustomerPOJO;
+import com.store.pojos.builders.CustomerPOJOBuilder;
 import com.store.util.RESTAPICaller;
 
 import static com.store.util.Constants.*;
@@ -52,6 +54,9 @@ public class LoginActivity extends AppCompatActivity {
     private String userName,password,userId;
     private boolean isFirstSession;
     private Cursor sessionCursor;
+    private CustomerPOJO customerPOJO;
+    private Bundle bundle;
+    private String userGroupId;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -66,7 +71,7 @@ public class LoginActivity extends AppCompatActivity {
             if (isFirstSession)
                 insertSession(1);
             else
-                //TODO HERE
+                getInsertLastSession();
         } else super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -75,47 +80,83 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_page);
 
+        Intent intent = new Intent(getApplicationContext(), MainScreenActivity.class);
+        mainIntent= intent;
+        bundle = new Bundle();
+
         initializeDB();
         initializeObjects();
         setListeners();
         checkSessions();
-        /*if(haveNetworkConnection()) {
-            //callProductRetrievalAct();
-        }else{
-            showConstantDialog(LoginActivity.this,NOTICE.name(),NOTICE_MESSAGE,mainIntent,"",false);
-        }
+    }
 
-        Intent intent = new Intent(getApplicationContext(), MainScreenActivity.class);
-        mainIntent= intent;*/
-        //startActivityForResult(mainIntent,MAIN_DRAWER_ACTIVITY_REQUEST_CODE);//this line is for testing purposes only
+    private CustomerPOJO setCustomerPOJO(Cursor userCursor){
+        userGroupId=userCursor.getString(userCursor.getColumnIndex("USER_GROUP_ID"));
+
+        CustomerPOJO customer = new CustomerPOJOBuilder()
+                .fName(userCursor.getString(userCursor.getColumnIndex("FIRSTNAME")))
+                .lName(userCursor.getString(userCursor.getColumnIndex("LASTNAME")))
+                .mobile(userCursor.getString(userCursor.getColumnIndex("CONTACT")))
+                .email(userCursor.getString(userCursor.getColumnIndex("EMAIL")))
+                .fb(userCursor.getString(userCursor.getColumnIndex("FACEBOOK")))
+                .address(userCursor.getString(userCursor.getColumnIndex("ADDRESS")))
+                .cityTown(userCursor.getString(userCursor.getColumnIndex("CITY")))
+                .brgy(userCursor.getString(userCursor.getColumnIndex("BRGY")))
+                .landmark(userCursor.getString(userCursor.getColumnIndex("LANDMARKS")))
+                .note(userCursor.getString(userCursor.getColumnIndex("NOTES")))
+                .build();
+        return customer;
     }
 
     private void insertSession(int sessionId){
         try{
             mydb.insetSession(sessionId);
+            checkUserLogStatus();
         }catch (Exception e){
             Log.i(null,e.getMessage());
         }
     }
 
-    private void getInsertLastSession(){
-        while(sessionCursor.moveToNext()){
+    public void checkUserLogStatus(){
+        Cursor userCursor=mydb.getLoggedInUser();
+        if(userCursor.getCount()==1){
+            userCursor.moveToFirst();
+            String fName=userCursor.getString(userCursor.getColumnIndex("FIRSTNAME"));
+            String lName=userCursor.getString(userCursor.getColumnIndex("LASTNAME"));
+            String userId=userCursor.getString(userCursor.getColumnIndex("USER_ID"));
+            bundle.putSerializable(CUSTOMER_POJO_SERIAL_KEY,setCustomerPOJO(userCursor));
 
+            mainIntent.putExtra("fName",fName);
+            mainIntent.putExtra("lName",lName);
+            mainIntent.putExtra("userId",userId);
+            mainIntent.putExtra("userGroupId",userGroupId);
+            mainIntent.putExtras(bundle);
+            startActivityForResult(mainIntent,MAIN_DRAWER_ACTIVITY_REQUEST_CODE);
         }
     }
 
+    private void getInsertLastSession(){
+        sessionCursor.moveToPosition(sessionCursor.getCount() - 1);
+        insertSession((sessionCursor.getInt(sessionCursor.getColumnIndex("SESSION_ID")))+1);
+    }
+
     private void checkSessions(){
+        boolean isConnected=haveNetworkConnection();
         Cursor sessionCursor = mydb.getAllData(mydb.APP_SESSION_HISTORY);
         this.sessionCursor=sessionCursor;
         int count = sessionCursor.getCount();
         if(count==0){
-            boolean isConnected=haveNetworkConnection();
             if(!isConnected)
                 showConstantDialog(LoginActivity.this,NOTICE.name(),NOTICE_FIRST_SESSION,mainIntent,"",false);
             else{
                 Intent dbCreateIntent = new Intent(getApplicationContext(),DBCreateActivity.class);
                 startActivityForResult(dbCreateIntent,DB_CREATE_REQUEST_CODE);
                 isFirstSession=true;
+            }
+        }else{
+            if(isConnected){
+                Intent dbCreateIntent = new Intent(getApplicationContext(),DBCreateActivity.class);
+                startActivityForResult(dbCreateIntent,DB_CREATE_REQUEST_CODE);
             }
         }
     }
@@ -127,8 +168,8 @@ public class LoginActivity extends AppCompatActivity {
         txtUsername = (TextView) findViewById(R.id.txtUsername);
         txtPassword = (TextView) findViewById(R.id.txtPassword);
 
-        txtUsername.setText("Uu");
-        txtPassword.setText("uu");
+        txtUsername.setText("rzbanal");
+        txtPassword.setText("12345");
     }
 
     private void initializeDB(){
@@ -185,11 +226,8 @@ public class LoginActivity extends AppCompatActivity {
 
     private void performLoginCheck(String username,String password) throws JSONException {
         if(haveNetworkConnection()) {
-            this.userName=txtUsername.getText().toString();
-            this.password=txtPassword.getText().toString();
-
             JSONObject postDataParams = new JSONObject();
-            postDataParams.put("username", userName);
+            postDataParams.put("username", username);
             postDataParams.put("password", password);
 
             JSONObject userObj = new JSONObject();
@@ -197,29 +235,63 @@ public class LoginActivity extends AppCompatActivity {
 
             new LoginAPI().execute(LOGIN_URL,userObj.toString());
         }else{
-            showConstantDialog(LoginActivity.this,NOTICE.name(),NOTICE_MESSAGE,mainIntent,"",false);
+            Cursor userCursor=mydb.checkUser(username,password);
+            if(userCursor==null)
+                showConstantDialog(LoginActivity.this,"USER AUTHENTICATION",USER_NAME_PASSWORD_NOT_EXISTING,mainIntent,"",false);
+            else{
+                userCursor.moveToFirst();
+                bundle.putSerializable(CUSTOMER_POJO_SERIAL_KEY,setCustomerPOJO(userCursor));
+
+                String fName=userCursor.getString(userCursor.getColumnIndex("FIRSTNAME"));
+                String lName=userCursor.getString(userCursor.getColumnIndex("LASTNAME"));
+                String userId=userCursor.getString(userCursor.getColumnIndex("USER_ID"));
+                mydb.updateLoggedInStatus(userId,"true");
+                startMainActivity("",USER_AUTHENTICATED,fName,lName,userId);
+            }
+        }
+    }
+
+    public void startMainActivity(String status,String statusMsg,String fName,String lName,String userId){
+        showConstantDialog(LoginActivity.this,"USER AUTHENTICATION",statusMsg,mainIntent,status,false);
+        if(!status.equalsIgnoreCase("FAILED")){
+            mainIntent.putExtra("fName",fName);
+            mainIntent.putExtra("lName",lName);
+            mainIntent.putExtra("userId",userId);
+            mainIntent.putExtra("userGroupId",userGroupId);
+            mainIntent.putExtras(bundle);
+            startActivityForResult(mainIntent,MAIN_DRAWER_ACTIVITY_REQUEST_CODE);
         }
     }
 
     public void callAfterLoginAPI(String message){
-        JsonParser parser = new JsonParser();
-        JsonElement tradeElement = parser.parse(message);
-        JsonObject userObj = tradeElement.getAsJsonObject().getAsJsonObject("user");
+        try{
+            JsonParser parser = new JsonParser();
+            JsonElement tradeElement = parser.parse(message);
+            JsonObject userObj = tradeElement.getAsJsonObject().getAsJsonObject("user");
 
-        String status = userObj.get("status").toString().replaceAll("\"","");
-        String statusMsg = userObj.get("status_msg").toString().replaceAll("\"","");
-        String fName = userObj.get("firstname").toString().replaceAll("\"","");
-        String lName = userObj.get("lastname").toString().replaceAll("\"","");
+            String status = userObj.get("status").toString().replaceAll("\"","");
+            String statusMsg = userObj.get("status_msg").toString().replaceAll("\"","");
 
-        showConstantDialog(LoginActivity.this,"USER AUTHENTICATION",statusMsg,mainIntent,status,false);
-        if(!status.equalsIgnoreCase("FAILED")){
-            userId = userObj.get("user_id").toString().replaceAll("\"","");
-            mainIntent.putExtra("fName",fName);
-            mainIntent.putExtra("lName",lName);
-            mainIntent.putExtra("userId",userId);
-            startActivityForResult(mainIntent,MAIN_DRAWER_ACTIVITY_REQUEST_CODE);
+            showConstantDialog(LoginActivity.this,"USER AUTHENTICATION",statusMsg,mainIntent,status,false);
+            if(!status.equalsIgnoreCase("FAILED")){
+                String fName = userObj.get("firstname").toString().replaceAll("\"","");
+                String lName = userObj.get("lastname").toString().replaceAll("\"","");
+
+                String userName = userObj.get("username").toString().replaceAll("\"","");
+                String userId = userObj.get("user_id").toString().replaceAll("\"","");
+                String password = userObj.get("password").toString().replaceAll("\"","");
+                mydb.saveUpdateUser(userId,userName,password,userObj);
+                mydb.updateLoggedInStatus(userId,"true");
+
+                Cursor userCursor=mydb.getLoggedInUser();
+                userCursor.moveToFirst();
+                bundle.putSerializable(CUSTOMER_POJO_SERIAL_KEY,setCustomerPOJO(userCursor));
+
+                startMainActivity(status,statusMsg,fName,lName,userId);
+            }
+        }catch (Exception e){
+            Log.i(null,e.getMessage());
         }
-
     }
 
     public class LoginAPI extends AsyncTask<String, Void, String>{

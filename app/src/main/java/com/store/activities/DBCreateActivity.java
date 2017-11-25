@@ -40,6 +40,7 @@ public class DBCreateActivity extends AppCompatActivity {
         try {
             super.onCreate(savedInstanceState);
             mydb = new DBHelper(this);
+            //mydb.doDBRefresh();
             callRESTAPIForData();
         } catch (Exception e) {
             e.printStackTrace();

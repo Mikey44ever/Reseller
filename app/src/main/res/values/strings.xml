@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Reseller</string>
+    <string name="app_name">KIREI</string>
     <string name="scan_barcode_button">Scan barcode</string>
     <string name="no_barcode_captured">No barcode captured</string>
     <string name="barcode_error_format">"Error reading barcode: %1$s"</string>
@@ -52,8 +52,8 @@
         <item>Cart List</item>
     </string-array>
 
-    <string-array name="main_grid_array">
-        <item>Customers</item>
+    <string-array name="reseller_grid_array">
+        <item>Customer Details</item>
         <item>COD Areas</item>
         <item>LBC/JRS Shipping Rates</item>
         <item>COD Shipping Rates</item>
